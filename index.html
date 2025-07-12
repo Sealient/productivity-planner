@@ -247,6 +247,7 @@
         const userName = document.getElementById('userName');
         const weeklyFocus = document.getElementById('weeklyFocus');
         const saveProfile = document.getElementById('saveProfile');
+        const DEPLOYED_URL = "https://sealient.github.io/productivity-planner/planner.html";
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -389,10 +390,11 @@
             });
 
             const today = new Date().toDateString();
-            localStorage.setItem('lastVisitDate', today);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            sessionStorage.setItem('lastVisitDate', today);
+            sessionStorage.setItem('tasks', JSON.stringify(tasks));
+            sessionStorage.setItem('plannerActive', 'true'); // Flag for extension
         }
-
+        
         function loadData() {
             // Load dark mode preference
             const darkMode = localStorage.getItem('darkMode') === 'true';
@@ -437,6 +439,48 @@
                 saveData();
             }
         }
+        
+        // Add this to your existing planner code
+function checkAllTasksComplete() {
+  const allChecked = Array.from(taskCheckboxes).every(checkbox => checkbox.checked);
+  if (allChecked) {
+    chrome.runtime?.sendMessage({ 
+      action: "setCompletion", 
+      completed: true 
+    });
+    // Optional: Show completion celebration
+    alert("🎉 All tasks completed! You've earned free browsing time!");
+  }
+}
+
+// Modify your existing checkbox event listeners
+taskCheckboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    updateProgress();
+    updateStreaks();
+    saveData();
+    checkAllTasksComplete(); // Add this line
+  });
+});
+
+function createCompletionFile() {
+    if (allTasksCompleted) {
+        fetch('https://your-server-endpoint.com/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: true })
+        });
+        
+        // Or for local version (requires Electron or similar)
+        if (typeof require !== 'undefined') {
+            const fs = require('fs');
+            fs.writeFileSync(
+                `${require('os').homedir()}/AppData/Local/PlannerCompleted.flag`, 
+                'completed'
+            );
+        }
+    }
+}
 
         // Auto-save every minute
         setInterval(saveData, 60000);
