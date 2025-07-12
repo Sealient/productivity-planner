@@ -29,6 +29,14 @@
         .quote-transition {
             transition: opacity 0.5s ease-in-out;
         }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translate(-50%, 0); }
+            to { opacity: 0; transform: translate(-50%, -20px); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen transition-colors duration-300">
@@ -247,7 +255,12 @@
         const userName = document.getElementById('userName');
         const weeklyFocus = document.getElementById('weeklyFocus');
         const saveProfile = document.getElementById('saveProfile');
-        const DEPLOYED_URL = "https://sealient.github.io/productivity-planner/planner.html";
+
+        // Track task completion state
+        let completionState = {
+            allCompleted: false,
+            lastCheck: 0
+        };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -271,6 +284,9 @@
 
             // Check if it's a new day and reset tasks if needed
             checkNewDay();
+
+            // Initialize completion tracking
+            setupCompletionTracking();
         });
 
         function showRandomQuote() {
@@ -301,6 +317,7 @@
                     updateProgress();
                     updateStreaks();
                     saveData();
+                    checkAllTasksComplete();
                 });
             });
 
@@ -390,11 +407,10 @@
             });
 
             const today = new Date().toDateString();
-            sessionStorage.setItem('lastVisitDate', today);
-            sessionStorage.setItem('tasks', JSON.stringify(tasks));
-            sessionStorage.setItem('plannerActive', 'true'); // Flag for extension
+            localStorage.setItem('lastVisitDate', today);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
         }
-        
+
         function loadData() {
             // Load dark mode preference
             const darkMode = localStorage.getItem('darkMode') === 'true';
@@ -433,54 +449,99 @@
                     checkbox.checked = false;
                 });
                 
+                // Reset completion status
+                if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    chrome.runtime.sendMessage({
+                        action: "setCompletion",
+                        completed: false
+                    });
+                }
+                sessionStorage.setItem('plannerCompleted', 'false');
+                completionState.allCompleted = false;
+                
                 // Update UI
                 updateProgress();
                 updateStreaks();
                 saveData();
             }
         }
-        
-        // Add this to your existing planner code
-function checkAllTasksComplete() {
-  const allChecked = Array.from(taskCheckboxes).every(checkbox => checkbox.checked);
-  if (allChecked) {
-    chrome.runtime?.sendMessage({ 
-      action: "setCompletion", 
-      completed: true 
-    });
-    // Optional: Show completion celebration
-    alert("🎉 All tasks completed! You've earned free browsing time!");
-  }
-}
 
-// Modify your existing checkbox event listeners
-taskCheckboxes.forEach(checkbox => {
-  checkbox.addEventListener('change', function() {
-    updateProgress();
-    updateStreaks();
-    saveData();
-    checkAllTasksComplete(); // Add this line
-  });
-});
-
-function createCompletionFile() {
-    if (allTasksCompleted) {
-        fetch('https://your-server-endpoint.com/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true })
-        });
-        
-        // Or for local version (requires Electron or similar)
-        if (typeof require !== 'undefined') {
-            const fs = require('fs');
-            fs.writeFileSync(
-                `${require('os').homedir()}/AppData/Local/PlannerCompleted.flag`, 
-                'completed'
-            );
+        function setupCompletionTracking() {
+            // Check completion status on load
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                chrome.runtime.sendMessage(
+                    { action: "getCompletion" },
+                    response => {
+                        if (response?.completed) {
+                            completionState.allCompleted = true;
+                            showCompletionMessage();
+                        }
+                    }
+                );
+            } else {
+                const stored = sessionStorage.getItem('plannerCompleted');
+                if (stored === 'true') {
+                    completionState.allCompleted = true;
+                    showCompletionMessage();
+                }
+            }
+            
+            // Continuous checking (as fallback)
+            setInterval(checkAllTasksComplete, 1000);
         }
-    }
-}
+
+        function checkAllTasksComplete() {
+            // Throttle checks to once per second
+            const now = Date.now();
+            if (now - completionState.lastCheck < 1000) return;
+            completionState.lastCheck = now;
+
+            const checkboxes = Array.from(document.querySelectorAll('.task-checkbox'));
+            const allChecked = checkboxes.length > 0 && checkboxes.every(cb => cb.checked);
+            
+            if (allChecked !== completionState.allCompleted) {
+                completionState.allCompleted = allChecked;
+                updateCompletionStatus(allChecked);
+            }
+        }
+
+        function updateCompletionStatus(completed) {
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                chrome.runtime.sendMessage({
+                    action: "setCompletion",
+                    completed: completed
+                });
+            }
+            // Fallback to session storage
+            sessionStorage.setItem('plannerCompleted', String(completed));
+            
+            if (completed) {
+                showCompletionMessage();
+            }
+        }
+
+        function showCompletionMessage() {
+            const existingMsg = document.getElementById('completion-message');
+            if (existingMsg) return;
+
+            const msg = document.createElement('div');
+            msg.id = 'completion-message';
+            msg.innerHTML = `
+                <div style="position:fixed; top:20px; left:50%; transform:translateX(-50%);
+                    background:#2ecc70; color:white; padding:15px 25px; border-radius:8px;
+                    box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:1000; text-align:center;
+                    animation:fadeIn 0.5s ease-out;">
+                    <h3 style="margin:0 0 8px 0;">🎉 All Tasks Completed! 🎉</h3>
+                    <p style="margin:0;">You've earned free browsing time</p>
+                </div>
+            `;
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'fadeOut 0.5s ease-in';
+                setTimeout(() => msg.remove(), 500);
+            }, 5000);
+        }
 
         // Auto-save every minute
         setInterval(saveData, 60000);
