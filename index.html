@@ -505,20 +505,40 @@
             }
         }
 
-        function updateCompletionStatus(completed) {
-            if (typeof chrome !== 'undefined' && chrome.runtime) {
-                chrome.runtime.sendMessage({
-                    action: "setCompletion",
-                    completed: completed
-                });
+function updateCompletionStatus(completed) {
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+            action: "setCompletion",
+            completed: completed
+        });
+    }
+    // Fallback to localStorage if extension isn't available
+    localStorage.setItem('plannerCompleted', String(completed));
+    
+    if (completed) {
+        showCompletionMessage();
+    }
+}
+        // Check completion status on load
+function checkInitialCompletion() {
+    if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage(
+            { action: "getCompletion" },
+            response => {
+                if (response?.completed) {
+                    completionState.allCompleted = true;
+                    showCompletionMessage();
+                }
             }
-            // Fallback to session storage
-            sessionStorage.setItem('plannerCompleted', String(completed));
-            
-            if (completed) {
-                showCompletionMessage();
-            }
+        );
+    } else {
+        const stored = localStorage.getItem('plannerCompleted');
+        if (stored === 'true') {
+            completionState.allCompleted = true;
+            showCompletionMessage();
         }
+    }
+}
 
         function showCompletionMessage() {
             const existingMsg = document.getElementById('completion-message');
