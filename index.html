@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 LEVEL UP PLANNER 🔥</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar {
+            height: 10px;
+            transition: width 0.5s ease-in-out;
+        }
+        .streak {
+            position: relative;
+        }
+        .streak::after {
+            content: "🔥";
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .streak.active::after {
+            opacity: 1;
+        }
+        .quote-transition {
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">🔥 LEVEL UP PLANNER</h1>
+            <div class="flex items-center space-x-4">
+                <button id="darkModeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+                <div id="currentDate" class="font-medium"></div>
+            </div>
+        </header>
+
+        <!-- Motivational Quote -->
+        <div id="quoteContainer" class="bg-indigo-100 dark:bg-indigo-900 p-4 rounded-lg mb-6 text-center italic quote-transition">
+            <p id="quoteText" class="text-indigo-800 dark:text-indigo-200"></p>
+            <p id="quoteAuthor" class="mt-2 text-indigo-600 dark:text-indigo-300 font-medium"></p>
+        </div>
+
+        <!-- User Profile -->
+        <div id="profileSection" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Your Mission</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Your Name</label>
+                    <input id="userName" type="text" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Weekly Focus</label>
+                    <select id="weeklyFocus" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                        <option value="job_apps">Job Applications</option>
+                        <option value="workout">Fitness Routine</option>
+                        <option value="skill">Skill Building</option>
+                        <option value="hustle">Side Hustle</option>
+                    </select>
+                </div>
+            </div>
+            <button id="saveProfile" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Save Mission</button>
+        </div>
+
+        <!-- Progress Meter -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-semibold mb-4">Daily Progress</h2>
+            <div class="flex justify-between mb-2">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                <div id="progressBar" class="progress-bar bg-indigo-600 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Daily Schedule -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Morning -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-sun text-yellow-500 mr-2"></i> Morning
+                </h2>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task1" class="mt-1 mr-2 task-checkbox" data-category="morning">
+                        <label for="task1" class="flex-1">Wake up by 8:00 AM</label>
+                        <span id="streak1" class="streak" data-streak="0">0</span>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task2" class="mt-1 mr-2 task-checkbox" data-category="morning">
+                        <label for="task2" class="flex-1">Make bed + cold shower</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task3" class="mt-1 mr-2 task-checkbox" data-category="morning">
+                        <label for="task3" class="flex-1">15 min walk + breakfast</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task4" class="mt-1 mr-2 task-checkbox" data-category="morning">
+                        <label for="task4" class="flex-1">Apply to jobs (1 hour)</label>
+                        <span id="streak4" class="streak" data-streak="0">0</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Afternoon -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-sun text-orange-500 mr-2"></i> Afternoon
+                </h2>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task5" class="mt-1 mr-2 task-checkbox" data-category="afternoon">
+                        <label for="task5" class="flex-1">Workout session</label>
+                        <span id="streak5" class="streak" data-streak="0">0</span>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task6" class="mt-1 mr-2 task-checkbox" data-category="afternoon">
+                        <label for="task6" class="flex-1">Skill building (30 min)</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task7" class="mt-1 mr-2 task-checkbox" data-category="afternoon">
+                        <label for="task7" class="flex-1">Side hustle work</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task8" class="mt-1 mr-2 task-checkbox" data-category="afternoon">
+                        <label for="task8" class="flex-1">20-30 min walk</label>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Evening -->
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-moon text-purple-500 mr-2"></i> Evening
+                </h2>
+                <ul class="space-y-3">
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task9" class="mt-1 mr-2 task-checkbox" data-category="evening">
+                        <label for="task9" class="flex-1">Plan tomorrow</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task10" class="mt-1 mr-2 task-checkbox" data-category="evening">
+                        <label for="task10" class="flex-1">No zero days check</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task11" class="mt-1 mr-2 task-checkbox" data-category="evening">
+                        <label for="task11" class="flex-1">Reflect on progress</label>
+                    </li>
+                    <li class="flex items-start">
+                        <input type="checkbox" id="task12" class="mt-1 mr-2 task-checkbox" data-category="evening">
+                        <label for="task12" class="flex-1">Bed by 11:30 PM</label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Habit Tracker -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+            <h2 class="text-xl font-semibold mb-4">Habit Streaks</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="workoutStreak">0</div>
+                    <div class="text-sm">Workout Days</div>
+                </div>
+                <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="jobAppsStreak">0</div>
+                    <div class="text-sm">Job Apps Sent</div>
+                </div>
+                <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="earlyRiseStreak">0</div>
+                    <div class="text-sm">Early Wake-ups</div>
+                </div>
+                <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg text-center">
+                    <div class="text-2xl font-bold" id="noZeroDaysStreak">0</div>
+                    <div class="text-sm">No Zero Days</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <h2 class="text-xl font-semibold mb-4">Quick Job Links</h2>
+            <div class="flex flex-wrap gap-2">
+                <a href="https://www.indeed.com" target="_blank" class="bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">Indeed</a>
+                <a href="https://www.linkedin.com/jobs" target="_blank" class="bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">LinkedIn Jobs</a>
+                <a href="https://www.amazon.jobs" target="_blank" class="bg-orange-100 dark:bg-orange-900 px-3 py-1 rounded hover:bg-orange-200 dark:hover:bg-orange-800 transition">Amazon Jobs</a>
+                <a href="https://jobs.target.com" target="_blank" class="bg-red-100 dark:bg-red-900 px-3 py-1 rounded hover:bg-red-200 dark:hover:bg-red-800 transition">Target Jobs</a>
+                <a href="https://www.walmart.com/careers" target="_blank" class="bg-blue-100 dark:bg-blue-900 px-3 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">Walmart Careers</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Motivational quotes
+        const quotes = [
+            {
+                text: "Discipline is choosing between what you want now and what you want most.",
+                author: "Abraham Lincoln"
+            },
+            {
+                text: "The only way to do great work is to love what you do.",
+                author: "Steve Jobs"
+            },
+            {
+                text: "Success is the sum of small efforts, repeated day in and day out.",
+                author: "Robert Collier"
+            },
+            {
+                text: "You don't have to be great to start, but you have to start to be great.",
+                author: "Zig Ziglar"
+            },
+            {
+                text: "The pain of discipline weighs ounces, the pain of regret weighs tons.",
+                author: "Jim Rohn"
+            },
+            {
+                text: "Every day, in every way, I'm getting better and better.",
+                author: "Émile Coué"
+            }
+        ];
+
+        // DOM elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const currentDateEl = document.getElementById('currentDate');
+        const quoteText = document.getElementById('quoteText');
+        const quoteAuthor = document.getElementById('quoteAuthor');
+        const quoteContainer = document.getElementById('quoteContainer');
+        const progressBar = document.getElementById('progressBar');
+        const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+        const streaks = document.querySelectorAll('.streak');
+        const workoutStreak = document.getElementById('workoutStreak');
+        const jobAppsStreak = document.getElementById('jobAppsStreak');
+        const earlyRiseStreak = document.getElementById('earlyRiseStreak');
+        const noZeroDaysStreak = document.getElementById('noZeroDaysStreak');
+        const userName = document.getElementById('userName');
+        const weeklyFocus = document.getElementById('weeklyFocus');
+        const saveProfile = document.getElementById('saveProfile');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const now = new Date();
+            currentDateEl.textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Show random quote
+            showRandomQuote();
+
+            // Load saved data
+            loadData();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Check if it's a new day and reset tasks if needed
+            checkNewDay();
+        });
+
+        function showRandomQuote() {
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            // Fade out
+            quoteContainer.style.opacity = '0';
+            
+            setTimeout(() => {
+                quoteText.textContent = randomQuote.text;
+                quoteAuthor.textContent = `— ${randomQuote.author}`;
+                
+                // Fade in
+                quoteContainer.style.opacity = '1';
+            }, 500);
+        }
+
+        function setupEventListeners() {
+            // Dark mode toggle
+            darkModeToggle.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+            });
+
+            // Task checkboxes
+            taskCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateProgress();
+                    updateStreaks();
+                    saveData();
+                });
+            });
+
+            // Save profile
+            saveProfile.addEventListener('click', function() {
+                localStorage.setItem('userName', userName.value);
+                localStorage.setItem('weeklyFocus', weeklyFocus.value);
+                alert('Profile saved!');
+            });
+        }
+
+        function updateProgress() {
+            const totalTasks = taskCheckboxes.length;
+            const completedTasks = Array.from(taskCheckboxes).filter(cb => cb.checked).length;
+            const progress = (completedTasks / totalTasks) * 100;
+            
+            progressBar.style.width = `${progress}%`;
+            
+            // Change color based on progress
+            if (progress < 30) {
+                progressBar.className = 'progress-bar bg-red-500 rounded-full';
+            } else if (progress < 70) {
+                progressBar.className = 'progress-bar bg-yellow-500 rounded-full';
+            } else {
+                progressBar.className = 'progress-bar bg-green-500 rounded-full';
+            }
+        }
+
+        function updateStreaks() {
+            // Update individual streaks
+            streaks.forEach(streakEl => {
+                const checkboxId = streakEl.id.replace('streak', 'task');
+                const checkbox = document.getElementById(checkboxId);
+                
+                if (checkbox && checkbox.checked) {
+                    let currentStreak = parseInt(streakEl.getAttribute('data-streak')) || 0;
+                    currentStreak++;
+                    streakEl.setAttribute('data-streak', currentStreak);
+                    streakEl.textContent = currentStreak;
+                    streakEl.classList.add('active');
+                } else if (checkbox && !checkbox.checked) {
+                    streakEl.classList.remove('active');
+                }
+            });
+
+            // Update workout streak (task5)
+            const workoutCheckbox = document.getElementById('task5');
+            if (workoutCheckbox && workoutCheckbox.checked) {
+                let currentStreak = parseInt(localStorage.getItem('workoutStreak')) || 0;
+                currentStreak++;
+                localStorage.setItem('workoutStreak', currentStreak);
+                workoutStreak.textContent = currentStreak;
+            }
+
+            // Update job apps streak (task4)
+            const jobAppsCheckbox = document.getElementById('task4');
+            if (jobAppsCheckbox && jobAppsCheckbox.checked) {
+                let currentStreak = parseInt(localStorage.getItem('jobAppsStreak')) || 0;
+                currentStreak++;
+                localStorage.setItem('jobAppsStreak', currentStreak);
+                jobAppsStreak.textContent = currentStreak;
+            }
+
+            // Update early rise streak (task1)
+            const earlyRiseCheckbox = document.getElementById('task1');
+            if (earlyRiseCheckbox && earlyRiseCheckbox.checked) {
+                let currentStreak = parseInt(localStorage.getItem('earlyRiseStreak')) || 0;
+                currentStreak++;
+                localStorage.setItem('earlyRiseStreak', currentStreak);
+                earlyRiseStreak.textContent = currentStreak;
+            }
+
+            // Update no zero days streak (task10)
+            const noZeroDaysCheckbox = document.getElementById('task10');
+            if (noZeroDaysCheckbox && noZeroDaysCheckbox.checked) {
+                let currentStreak = parseInt(localStorage.getItem('noZeroDaysStreak')) || 0;
+                currentStreak++;
+                localStorage.setItem('noZeroDaysStreak', currentStreak);
+                noZeroDaysStreak.textContent = currentStreak;
+            }
+        }
+
+        function saveData() {
+            const tasks = {};
+            taskCheckboxes.forEach(checkbox => {
+                tasks[checkbox.id] = checkbox.checked;
+            });
+
+            const today = new Date().toDateString();
+            localStorage.setItem('lastVisitDate', today);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function loadData() {
+            // Load dark mode preference
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            document.documentElement.classList.toggle('dark', darkMode);
+
+            // Load profile data
+            userName.value = localStorage.getItem('userName') || '';
+            weeklyFocus.value = localStorage.getItem('weeklyFocus') || 'job_apps';
+
+            // Load tasks
+            const savedTasks = JSON.parse(localStorage.getItem('tasks')) || {};
+            taskCheckboxes.forEach(checkbox => {
+                if (savedTasks[checkbox.id]) {
+                    checkbox.checked = savedTasks[checkbox.id];
+                }
+            });
+
+            // Load streaks
+            workoutStreak.textContent = localStorage.getItem('workoutStreak') || '0';
+            jobAppsStreak.textContent = localStorage.getItem('jobAppsStreak') || '0';
+            earlyRiseStreak.textContent = localStorage.getItem('earlyRiseStreak') || '0';
+            noZeroDaysStreak.textContent = localStorage.getItem('noZeroDaysStreak') || '0';
+
+            // Update UI
+            updateProgress();
+            updateStreaks();
+        }
+
+        function checkNewDay() {
+            const today = new Date().toDateString();
+            const lastVisitDate = localStorage.getItem('lastVisitDate');
+
+            if (lastVisitDate !== today) {
+                // It's a new day, reset task checkboxes
+                taskCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
+                // Update UI
+                updateProgress();
+                updateStreaks();
+                saveData();
+            }
+        }
+
+        // Auto-save every minute
+        setInterval(saveData, 60000);
+        
+        // Change quote every 2 minutes
+        setInterval(showRandomQuote, 120000);
+    </script>
+</body>
+</html>
